@@ -1,8 +1,7 @@
-import { InsuranceTableRow } from '../types';
+
+import { InsuranceTableRow, EmploymentType } from '../types';
 
 // Data transcribed from Kanagawa Prefecture March 2025 (Reiwa 7)
-// Note: The "Pension Grade" column in the source often aligns with Health grades 4-35, 
-// but implicitly Grade 1 Pension (88k) covers Health Grades 1-4.
 export const INSURANCE_TABLE: InsuranceTableRow[] = [
   { grade: 1, standardMonthlyRemuneration: 58000, rangeMin: 0, rangeMax: 63000 },
   { grade: 2, standardMonthlyRemuneration: 68000, rangeMin: 63000, rangeMax: 73000 },
@@ -56,8 +55,15 @@ export const INSURANCE_TABLE: InsuranceTableRow[] = [
   { grade: 50, standardMonthlyRemuneration: 1390000, rangeMin: 1355000, rangeMax: Infinity },
 ];
 
-// Caps and Floors
 export const MAX_PENSION_STANDARD = 650000; 
-export const MIN_PENSION_STANDARD = 88000; // Grade 1 for Pension (matches Health Grade 4 usually)
+export const MIN_PENSION_STANDARD = 88000; 
 export const MAX_HEALTH_STANDARD = 1390000; 
 export const MIN_HEALTH_STANDARD = 58000;
+
+// Employment Insurance Rates (Worker Share) for Reiwa 7 (2025)
+// Source: MHLW Reiwa 7 Rates
+export const EMPLOYMENT_RATES = {
+  [EmploymentType.GENERAL]: 0.0055,      // 5.5/1000
+  [EmploymentType.AGRICULTURE]: 0.0065,  // 6.5/1000
+  [EmploymentType.CONSTRUCTION]: 0.0065, // 6.5/1000
+};
