@@ -1,131 +1,61 @@
 
-import { CalculationResult, InsuranceRates, EmploymentType, CalculationOptions } from '../types';
-import { INSURANCE_TABLE, MAX_PENSION_STANDARD, MIN_PENSION_STANDARD, EMPLOYMENT_RATES } from './constants';
-import { getTaxFromTable } from './taxData';
+import { ApiClient } from '../copy-of-kanagawa-social-insurance-calculator-2025 (1)/src/api/ApiClient';
+import { EmploymentType, CalculationOptions, CalculationResult } from '../types';
 
-const roundSpecial = (amount: number): number => {
-  const integerPart = Math.floor(amount);
-  const fraction = amount - integerPart;
-  if (fraction > 0.50000001) {
-    return Math.ceil(amount);
-  }
-  return Math.floor(amount);
-};
-
-export const calculateInsurance = (
+export const calculateInsurance = async (
   salary: number, 
   age: number,
   employmentType: EmploymentType,
   dependents: number,
   options: CalculationOptions
-): CalculationResult => {
-  
-  // 1. Determine Age Category
-  let ageCategory: 'under40' | '40to64' | 'over64';
-  if (age < 40) {
-    ageCategory = 'under40';
-  } else if (age >= 40 && age < 65) {
-    ageCategory = '40to64';
-  } else {
-    ageCategory = 'over64';
-  }
-
-  // 2. Find Health Standard Remuneration
-  let row = INSURANCE_TABLE.find(r => salary >= r.rangeMin && salary < r.rangeMax);
-  if (!row && salary >= 1355000) {
-    row = INSURANCE_TABLE[INSURANCE_TABLE.length - 1];
-  }
-  if (!row && salary < 63000) {
-    row = INSURANCE_TABLE[0];
-  }
-  if (!row) {
-    row = INSURANCE_TABLE[INSURANCE_TABLE.length - 1];
-  }
-
-  const healthStandard = row.standardMonthlyRemuneration;
-  
-  // 3. Determine Pension Standard Remuneration
-  let pensionStandard = healthStandard;
-  if (pensionStandard < MIN_PENSION_STANDARD) {
-    pensionStandard = MIN_PENSION_STANDARD;
-  }
-  if (pensionStandard > MAX_PENSION_STANDARD) {
-    pensionStandard = MAX_PENSION_STANDARD;
-  }
-
-  // 4. Social Insurance Calculations
-  let healthRate = InsuranceRates.HEALTH_UNDER_40;
-  if (ageCategory === '40to64') {
-    healthRate = InsuranceRates.HEALTH_40_TO_64;
-  }
-
-  let totalHealth = 0;
-  let employeeHealth = 0;
-  let totalPension = 0;
-  let employeePension = 0;
-
-  if (options.enableSocial) {
-    totalHealth = healthStandard * healthRate;
-    employeeHealth = roundSpecial(healthStandard * healthRate / 2);
+): Promise<CalculationResult> => {
+  try {
+    const socialInsuranceData = await ApiClient.getSocialInsurance(salary, age);
+    const { employeeCost } = socialInsuranceData;
     
-    totalPension = pensionStandard * InsuranceRates.PENSION;
-    employeePension = roundSpecial(pensionStandard * InsuranceRates.PENSION / 2);
-  }
-
-  // 5. Employment Insurance Calculation
-  const empRate = EMPLOYMENT_RATES[employmentType];
-  let employeeEmployment = 0;
-
-  if (options.enableEmployment) {
-    // Rate depends on business type. Rounding: 0.50 down, 0.51 up (same as roundSpecial).
-    employeeEmployment = roundSpecial(salary * empRate);
-  }
-
-  // 6. Withholding Income Tax Calculation
-  // Taxable Base = Salary - (Health + Pension + Employment)
-  let taxAmount = 0;
-  
-  if (options.enableTax) {
-    const socialInsuranceTotal = employeeHealth + employeePension + employeeEmployment;
-    const taxableIncomeForTax = Math.max(0, salary - socialInsuranceTotal);
+    // Apply dependent adjustment to income tax if enabled
+    let taxAmount = options.enableTax && employeeCost.incomeTax !== null 
+      ? employeeCost.incomeTax - (dependents > 7 ? (dependents - 7) * 1610 : 0)
+      : 0;
     
-    // Lookup Tax
-    taxAmount = getTaxFromTable(taxableIncomeForTax, dependents);
-    
-    // Logic for dependents > 7 (Page 7 of PDF)
-    // "Subtract 1610 yen per person exceeding 7"
-    if (dependents > 7) {
-      const extraDependents = dependents - 7;
-      taxAmount = Math.max(0, taxAmount - (extraDependents * 1610));
-    }
+    const healthInsurance = {
+      total: employeeCost.healthCostWithNoCare + (employeeCost.careCost || 0),
+      employee: employeeCost.healthCostWithNoCare + (employeeCost.careCost || 0),
+      rate: 0
+    };
+
+    const pensionInsurance = {
+      total: employeeCost.pension * 2,
+      employee: employeeCost.pension,
+      rate: 0
+    };
+
+    // Calculate total deductions based on enabled options
+    const totalDeduction = 
+      (options.enableSocial ? (healthInsurance.employee + pensionInsurance.employee) : 0) +
+      (options.enableEmployment ? employeeCost.employmentInsurance || 0 : 0) +
+      (options.enableTax ? Math.max(0, taxAmount) : 0);
+
+    return {
+      salaryInput: salary,
+      standardRemuneration: 0,
+      standardRemunerationPension: 0,
+      healthInsurance,
+      pensionInsurance,
+      employmentInsurance: {
+        employee: employeeCost.employmentInsurance || 0,
+        rate: 0 // Rate not provided by API
+      },
+      incomeTax: {
+        amount: taxAmount
+      },
+      totalDeduction,
+      netPayment: salary - totalDeduction,
+      ageCategory: age < 40 ? 'under40' : (age < 65 ? '40to64' : 'over64'),
+      options
+    };
+  } catch (error) {
+    console.error('Failed to calculate insurance:', error);
+    throw new Error('保険料の計算に失敗しました。後でもう一度お試しください。');
   }
-
-  const totalDeduction = employeeHealth + employeePension + employeeEmployment + taxAmount;
-
-  return {
-    salaryInput: salary,
-    standardRemuneration: healthStandard,
-    standardRemunerationPension: pensionStandard,
-    healthInsurance: {
-      total: totalHealth,
-      employee: employeeHealth,
-      rate: healthRate
-    },
-    pensionInsurance: {
-      total: totalPension,
-      employee: employeePension,
-      rate: InsuranceRates.PENSION
-    },
-    employmentInsurance: {
-      employee: employeeEmployment,
-      rate: empRate
-    },
-    incomeTax: {
-      amount: taxAmount
-    },
-    totalDeduction: totalDeduction,
-    netPayment: salary - totalDeduction,
-    ageCategory,
-    options
-  };
 };

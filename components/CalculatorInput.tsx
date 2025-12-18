@@ -2,7 +2,7 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store/store';
-import { setSalary, setAge, setEmploymentType, setDependents, toggleOption, calculate } from '../store/calculatorSlice';
+import { setSalary, setAge, setEmploymentType, setDependents, toggleOption, calculateInsuranceAsync } from '../store/calculatorSlice';
 import { Calculator, Info, User, Briefcase, Users, Shield, HardHat, FileText, CheckCircle } from 'lucide-react';
 import { EmploymentType, CalculationOptions } from '../types';
 
@@ -77,7 +77,7 @@ export const CalculatorInput: React.FC = () => {
   };
 
   const handleCalculate = () => {
-    dispatch(calculate());
+    dispatch(calculateInsuranceAsync() as any);
   };
 
   const getAgeCategoryInfo = (age: number | '') => {

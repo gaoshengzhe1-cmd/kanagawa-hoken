@@ -6,20 +6,21 @@ export interface InsuranceTableRow {
   rangeMax: number;
 }
 
+export interface InsuranceCost {
+  total: number;
+  employee: number;
+  rate: number;
+}
+
 export interface CalculationResult {
   salaryInput: number;
   standardRemuneration: number;
   standardRemunerationPension: number;
-  healthInsurance: {
-    total: number;
-    employee: number;
-    rate: number;
-  };
-  pensionInsurance: {
-    total: number;
-    employee: number;
-    rate: number;
-  };
+  healthInsurance: InsuranceCost;
+  pensionInsurance: InsuranceCost;
+  nursingCareInsurance: InsuranceCost;
+  employmentInsurance: InsuranceCost;
+  incomeTax: InsuranceCost;
   totalDeduction: number;
   netPaymentBeforeTax: number;
   ageCategory: 'under40' | '40to64' | 'over64';
@@ -36,4 +37,6 @@ export interface CalculatorState {
   salary: number | '';
   age: number | '';
   result: CalculationResult | null;
+  status: 'idle' | 'loading' | 'succeeded' | 'failed';
+  error?: string;
 }

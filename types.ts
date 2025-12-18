@@ -53,6 +53,8 @@ export enum EmploymentType {
 }
 
 // Redux State Types
+export type Status = 'idle' | 'loading' | 'succeeded' | 'failed';
+
 export interface CalculatorState {
   salary: number | '';
   age: number | '';
@@ -60,4 +62,6 @@ export interface CalculatorState {
   dependents: number;
   options: CalculationOptions;
   result: CalculationResult | null;
+  status: Status;
+  error: string | null;
 }

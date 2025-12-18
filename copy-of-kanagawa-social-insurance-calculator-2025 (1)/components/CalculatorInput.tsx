@@ -1,12 +1,14 @@
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../store/store';
-import { setSalary, setAge, calculate } from '../store/calculatorSlice';
+import { useSelector } from 'react-redux';
+import { RootState, AppDispatch } from '../store/store';
+import { useAppDispatch } from '../src/hooks';
+import { setSalary, setAge } from '../store/calculatorSlice';
+import { calculateInsurance } from '../store/calculatorSlice';
 import { Calculator, Info, User } from 'lucide-react';
 
 export const CalculatorInput: React.FC = () => {
-  const dispatch = useDispatch();
-  const { salary, age } = useSelector((state: RootState) => state.calculator);
+  const dispatch = useAppDispatch();
+  const { salary, age, status } = useSelector((state: RootState) => state.calculator);
 
   const handleSalaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -34,8 +36,12 @@ export const CalculatorInput: React.FC = () => {
   };
 
   const handleCalculate = () => {
-    dispatch(calculate());
+    if (typeof salary === 'number' && typeof age === 'number') {
+      dispatch(calculateInsurance({ salary, age }));
+    }
   };
+
+  const isCalculateDisabled = status === 'loading' || salary === '' || age === '';
 
   const getAgeCategoryInfo = (age: number | '') => {
     if (age === '') return null;
@@ -111,8 +117,10 @@ export const CalculatorInput: React.FC = () => {
 
         <button
           onClick={handleCalculate}
-          disabled={!salary || age === ''}
-          className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-md shadow-sm transition-colors text-base flex justify-center items-center gap-2"
+          disabled={isCalculateDisabled}
+          className={`w-full py-3 px-6 rounded-md text-white font-medium transition-colors ${
+            isCalculateDisabled ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+          }`}
         >
           <Calculator className="w-5 h-5" />
           保険料を計算する
