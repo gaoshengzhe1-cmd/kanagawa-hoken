@@ -1,5 +1,5 @@
 
-import { ApiClient } from '../copy-of-kanagawa-social-insurance-calculator-2025 (1)/src/api/ApiClient';
+import { ApiClient } from '../src/api/ApiClient';
 import { EmploymentType, CalculationOptions, CalculationResult } from '../types';
 
 export const calculateInsurance = async (
