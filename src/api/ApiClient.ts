@@ -51,7 +51,9 @@ export interface SocialInsuranceDTO {
 }
 
 export class ApiClient {
-  private static readonly BASE_URL = process.env.REACT_APP_API_BASE_URL || '';
+  private static readonly HEALTH_INSURANCE_URL = import.meta.env.VITE_HEALTH_INSURANCE_URL || '';
+  private static readonly EMPLOYMENT_INSURANCE_URL = import.meta.env.VITE_EMPLOYMENT_INSURANCE_URL || '';
+  private static readonly PENSION_INSURANCE_URL = import.meta.env.VITE_PENSION_INSURANCE_URL || '';
 
   /**
    * 获取健康保险数据
@@ -59,7 +61,7 @@ export class ApiClient {
   private static async getHealthInsurance(monthlySalary: number, age: number): Promise<HealthInsuranceResponse> {
     try {
       const response = await api.get<HealthInsuranceResponse>(
-        `${this.BASE_URL}/health-insurance/calculate`,
+        `${this.HEALTH_INSURANCE_URL}/health-insurance/calculate`,
         { params: { monthlySalary, age } }
       );
       return response.data;
@@ -75,7 +77,7 @@ export class ApiClient {
   private static async getEmploymentInsurance(monthlySalary: number): Promise<EmploymentInsuranceResponse> {
     try {
       const response = await api.get<EmploymentInsuranceResponse>(
-        `${this.BASE_URL}/employment-insurance/calculate`,
+        `${this.EMPLOYMENT_INSURANCE_URL}/employment-insurance/calculate`,
         { params: { monthlySalary } }
       );
       return response.data;
@@ -91,7 +93,7 @@ export class ApiClient {
   private static async getPensionInsurance(monthlySalary: number): Promise<PensionInsuranceResponse> {
     try {
       const response = await api.get<PensionInsuranceResponse>(
-        `${this.BASE_URL}/pension-insurance/calculate`,
+        `${this.PENSION_INSURANCE_URL}/pension-insurance/calculate`,
         { params: { monthlySalary } }
       );
       return response.data;
