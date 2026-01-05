@@ -124,20 +124,20 @@ export class ApiClient {
         this.getPensionInsurance(monthlySalary)
       ]);
 
-      // 合并数据 - 健康保险服务现在返回所有数据
+      // 合并数据 - 从各个服务获取对应数据
       return {
         employeeCost: {
           careCost: healthData.employeeCost.careCost,
           healthCostWithNoCare: healthData.employeeCost.healthCostWithNoCare,
-          employmentInsurance: healthData.employeeCost.employmentInsurance,
-          pension: healthData.employeeCost.pension,
+          employmentInsurance: employmentData.employeeCost.employmentInsurance,
+          pension: pensionData.employeeCost.pension,
           incomeTax: healthData.employeeCost.incomeTax
         },
         employerCost: {
           careCost: healthData.employerCost.careCost,
           healthCostWithNoCare: healthData.employerCost.healthCostWithNoCare,
-          employmentInsurance: healthData.employerCost.employmentInsurance,
-          pension: healthData.employerCost.pension,
+          employmentInsurance: employmentData.employerCost.employmentInsurance,
+          pension: pensionData.employerCost.pension,
           incomeTax: healthData.employerCost.incomeTax
         }
       };
