@@ -1,5 +1,34 @@
 import api from './axios';
 
+interface HealthInsuranceResponse {
+  employeeCost: {
+    careCost: number;
+    healthCostWithNoCare: number;
+  };
+  employerCost: {
+    careCost: number;
+    healthCostWithNoCare: number;
+  };
+}
+
+interface EmploymentInsuranceResponse {
+  employeeCost: {
+    employmentInsurance: number;
+  };
+  employerCost: {
+    employmentInsurance: number | null;
+  };
+}
+
+interface PensionInsuranceResponse {
+  employeeCost: {
+    pension: number;
+  };
+  employerCost: {
+    pension: number;
+  };
+}
+
 export interface EmployeeCost {
   careCost: number;
   employmentInsurance: number | null;
@@ -22,21 +51,88 @@ export interface SocialInsuranceDTO {
 }
 
 export class ApiClient {
+  private static readonly BASE_URL = process.env.REACT_APP_API_BASE_URL || '';
+
   /**
-   * 获取社会保险数据
+   * 获取健康保险数据
+   */
+  private static async getHealthInsurance(monthlySalary: number, age: number): Promise<HealthInsuranceResponse> {
+    try {
+      const response = await api.get<HealthInsuranceResponse>(
+        `${this.BASE_URL}/health-insurance/calculate`,
+        { params: { monthlySalary, age } }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('获取健康保险数据失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 获取雇佣保险数据
+   */
+  private static async getEmploymentInsurance(monthlySalary: number): Promise<EmploymentInsuranceResponse> {
+    try {
+      const response = await api.get<EmploymentInsuranceResponse>(
+        `${this.BASE_URL}/employment-insurance/calculate`,
+        { params: { monthlySalary } }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('获取雇佣保险数据失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 获取厚生年金数据
+   */
+  private static async getPensionInsurance(monthlySalary: number): Promise<PensionInsuranceResponse> {
+    try {
+      const response = await api.get<PensionInsuranceResponse>(
+        `${this.BASE_URL}/pension-insurance/calculate`,
+        { params: { monthlySalary } }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('获取厚生年金数据失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 获取所有社会保险数据
    * @param monthlySalary 月薪
    * @param age 年龄
-   * @returns 社会保险数据
+   * @returns 合并后的社会保险数据
    */
   static async getSocialInsurance(monthlySalary: number, age: number): Promise<SocialInsuranceDTO> {
     try {
-      const response = await api.get<SocialInsuranceDTO>('/socialInsuranceQuery', {
-        params: {
-          monthlySalary,
-          age
+      // 并行调用所有服务
+      const [healthData, employmentData, pensionData] = await Promise.all([
+        this.getHealthInsurance(monthlySalary, age),
+        this.getEmploymentInsurance(monthlySalary),
+        this.getPensionInsurance(monthlySalary)
+      ]);
+
+      // 合并数据
+      return {
+        employeeCost: {
+          careCost: healthData.employeeCost.careCost,
+          healthCostWithNoCare: healthData.employeeCost.healthCostWithNoCare,
+          employmentInsurance: employmentData.employeeCost.employmentInsurance,
+          pension: pensionData.employeeCost.pension,
+          incomeTax: null // 这个需要单独计算或从其他服务获取
+        },
+        employerCost: {
+          careCost: healthData.employerCost.careCost,
+          healthCostWithNoCare: healthData.employerCost.healthCostWithNoCare,
+          employmentInsurance: employmentData.employerCost.employmentInsurance,
+          pension: pensionData.employerCost.pension,
+          incomeTax: null // 企业不承担所得税
         }
-      });
-      return response.data;
+      };
     } catch (error) {
       console.error('获取社会保险数据失败:', error);
       throw error;
