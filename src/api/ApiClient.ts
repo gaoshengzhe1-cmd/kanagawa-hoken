@@ -4,10 +4,16 @@ interface HealthInsuranceResponse {
   employeeCost: {
     careCost: number;
     healthCostWithNoCare: number;
+    pension: number;
+    employmentInsurance: number;
+    incomeTax: number;
   };
   employerCost: {
     careCost: number;
     healthCostWithNoCare: number;
+    pension: number;
+    employmentInsurance: number | null;
+    incomeTax: number | null;
   };
 }
 
@@ -118,21 +124,21 @@ export class ApiClient {
         this.getPensionInsurance(monthlySalary)
       ]);
 
-      // 合并数据
+      // 合并数据 - 健康保险服务现在返回所有数据
       return {
         employeeCost: {
           careCost: healthData.employeeCost.careCost,
           healthCostWithNoCare: healthData.employeeCost.healthCostWithNoCare,
-          employmentInsurance: employmentData.employeeCost.employmentInsurance,
-          pension: pensionData.employeeCost.pension,
-          incomeTax: null // 这个需要单独计算或从其他服务获取
+          employmentInsurance: healthData.employeeCost.employmentInsurance,
+          pension: healthData.employeeCost.pension,
+          incomeTax: healthData.employeeCost.incomeTax
         },
         employerCost: {
           careCost: healthData.employerCost.careCost,
           healthCostWithNoCare: healthData.employerCost.healthCostWithNoCare,
-          employmentInsurance: employmentData.employerCost.employmentInsurance,
-          pension: pensionData.employerCost.pension,
-          incomeTax: null // 企业不承担所得税
+          employmentInsurance: healthData.employerCost.employmentInsurance,
+          pension: healthData.employerCost.pension,
+          incomeTax: healthData.employerCost.incomeTax
         }
       };
     } catch (error) {
