@@ -127,15 +127,26 @@ export class ApiClient {
    */
   static async getSocialInsurance(monthlySalary: number, age: number): Promise<SocialInsuranceDTO> {
     try {
-      // 并行调用所有服务
-      const [healthData, employmentData, pensionData] = await Promise.all([
-        this.getHealthInsurance(monthlySalary, age),
-        this.getEmploymentInsurance(monthlySalary),
-        this.getPensionInsurance(monthlySalary)
-      ]);
-
-      // 合并数据 - 从各个服务获取对应数据
-      return {
+      console.log('开始获取社会保险数据...');
+      
+      // 第一步：获取健康保险数据
+      console.log('正在获取健康保险数据...');
+      const healthData = await this.getHealthInsurance(monthlySalary, age);
+      console.log('健康保险数据获取成功:', healthData);
+      
+      // 第二步：获取雇佣保险数据
+      console.log('正在获取雇佣保险数据...');
+      const employmentData = await this.getEmploymentInsurance(monthlySalary);
+      console.log('雇佣保险数据获取成功:', employmentData);
+      
+      // 第三步：获取厚生年金数据
+      console.log('正在获取厚生年金数据...');
+      const pensionData = await this.getPensionInsurance(monthlySalary);
+      console.log('厚生年金数据获取成功:', pensionData);
+      
+      // 所有数据获取成功，开始组合
+      console.log('开始组合所有数据...');
+      const result = {
         employeeCost: {
           careCost: healthData.employeeCost.careCost,
           healthCostWithNoCare: healthData.employeeCost.healthCostWithNoCare,
@@ -151,6 +162,9 @@ export class ApiClient {
           incomeTax: healthData.employerCost.incomeTax
         }
       };
+      
+      console.log('数据组合完成:', result);
+      return result;
     } catch (error) {
       console.error('获取社会保险数据失败:', error);
       throw error;
