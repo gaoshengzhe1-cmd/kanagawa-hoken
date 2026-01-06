@@ -1,4 +1,5 @@
 import api from './axios';
+import { getCachedApiConfig } from '../config/api-config';
 
 interface HealthInsuranceResponse {
   employeeCost: {
@@ -53,17 +54,14 @@ export interface SocialInsuranceDTO {
 }
 
 export class ApiClient {
-  private static readonly HEALTH_INSURANCE_URL = import.meta.env.VITE_HEALTH_INSURANCE_URL || 'http://localhost:3001';
-  private static readonly EMPLOYMENT_INSURANCE_URL = import.meta.env.VITE_EMPLOYMENT_INSURANCE_URL || 'http://localhost:3002';
-  private static readonly PENSION_INSURANCE_URL = import.meta.env.VITE_PENSION_INSURANCE_URL || 'http://localhost:3003';
-
   /**
    * 获取健康保险数据
    */
   private static async getHealthInsurance(monthlySalary: number, age: number): Promise<HealthInsuranceResponse> {
+    const config = await getCachedApiConfig();
     try {
       const response = await api.get<HealthInsuranceResponse>(
-        `${this.HEALTH_INSURANCE_URL}/health-insurance/calculate`,
+        `${config.healthInsuranceUrl}/health-insurance/calculate`,
         { params: { monthlySalary, age } }
       );
       return response.data;
@@ -77,9 +75,10 @@ export class ApiClient {
    * 获取雇佣保险数据
    */
   private static async getEmploymentInsurance(monthlySalary: number): Promise<EmploymentInsuranceResponse> {
+    const config = await getCachedApiConfig();
     try {
       const response = await api.get<EmploymentInsuranceResponse>(
-        `${this.EMPLOYMENT_INSURANCE_URL}/employment-insurance/calculate`,
+        `${config.employmentInsuranceUrl}/employment-insurance/calculate`,
         { params: { monthlySalary } }
       );
       return response.data;
@@ -93,9 +92,10 @@ export class ApiClient {
    * 获取厚生年金数据
    */
   private static async getPensionInsurance(monthlySalary: number): Promise<PensionInsuranceResponse> {
+    const config = await getCachedApiConfig();
     try {
       const response = await api.get<PensionInsuranceResponse>(
-        `${this.PENSION_INSURANCE_URL}/pension-insurance/calculate`,
+        `${config.pensionInsuranceUrl}/pension-insurance/calculate`,
         { params: { monthlySalary } }
       );
       return response.data;
