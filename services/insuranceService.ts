@@ -10,13 +10,38 @@ export const calculateInsurance = async (
   options: CalculationOptions
 ): Promise<CalculationResult> => {
   try {
+    // 1. 先获取社保数据
     const socialInsuranceData = await ApiClient.getSocialInsurance(salary, age);
     const { employeeCost } = socialInsuranceData;
     
-    // Apply dependent adjustment to income tax if enabled
-    let taxAmount = options.enableTax && employeeCost.incomeTax !== null 
-      ? employeeCost.incomeTax - (dependents > 7 ? (dependents - 7) * 1610 : 0)
-      : 0;
+    // 2. 计算社保等扣除项总额（不包括税）
+    const socialInsuranceDeductions = 
+      (options.enableSocial ? (employeeCost.healthCostWithNoCare + (employeeCost.careCost || 0) + employeeCost.pension) : 0) +
+      (options.enableEmployment ? (employeeCost.employmentInsurance || 0) : 0);
+    
+    // 3. 计算扣除社保后的金额
+    const afterSocialInsurance = salary - socialInsuranceDeductions;
+    
+    // 4. 用扣除社保后的金额去查询源泉所得税
+    let taxAmount = 0;
+    if (options.enableTax) {
+      try {
+        // Call the API to get the tax for the taxable income
+        const taxData = await ApiClient.getSocialInsurance(afterSocialInsurance, age);
+        taxAmount = taxData.employeeCost.incomeTax || 0;
+        
+        // Apply dependent adjustment if applicable
+        if (dependents > 7) {
+          taxAmount = Math.max(0, taxAmount - ((dependents - 7) * 1610));
+        }
+      } catch (error) {
+        console.error('Failed to calculate withholding tax:', error);
+        // Fallback to original calculation if API call fails
+        taxAmount = employeeCost.incomeTax !== null 
+          ? employeeCost.incomeTax - (dependents > 7 ? (dependents - 7) * 1610 : 0) 
+          : 0;
+      }
+    }
     
     const healthInsurance = {
       total: employeeCost.healthCostWithNoCare + (employeeCost.careCost || 0),
