@@ -4,16 +4,12 @@ interface HealthInsuranceResponse {
   employeeCost: {
     careCost: number;
     healthCostWithNoCare: number;
-    pension: number;
-    employmentInsurance: number;
     incomeTax: number;
   };
   employerCost: {
     careCost: number;
     healthCostWithNoCare: number;
-    pension: number;
-    employmentInsurance: number | null;
-    incomeTax: number | null;
+    incomeTax: number;
   };
 }
 
@@ -57,9 +53,9 @@ export interface SocialInsuranceDTO {
 }
 
 export class ApiClient {
-  private static readonly HEALTH_INSURANCE_URL = import.meta.env.VITE_HEALTH_INSURANCE_URL || '';
-  private static readonly EMPLOYMENT_INSURANCE_URL = import.meta.env.VITE_EMPLOYMENT_INSURANCE_URL || '';
-  private static readonly PENSION_INSURANCE_URL = import.meta.env.VITE_PENSION_INSURANCE_URL || '';
+  private static readonly HEALTH_INSURANCE_URL = import.meta.env.VITE_HEALTH_INSURANCE_URL || 'http://localhost:3001';
+  private static readonly EMPLOYMENT_INSURANCE_URL = import.meta.env.VITE_EMPLOYMENT_INSURANCE_URL || 'http://localhost:3002';
+  private static readonly PENSION_INSURANCE_URL = import.meta.env.VITE_PENSION_INSURANCE_URL || 'http://localhost:3003';
 
   /**
    * 获取健康保险数据
@@ -136,7 +132,7 @@ export class ApiClient {
         employerCost: {
           careCost: healthData.employerCost.careCost,
           healthCostWithNoCare: healthData.employerCost.healthCostWithNoCare,
-          employmentInsurance: employmentData.employerCost.employmentInsurance,
+          employmentInsurance: employmentData.employerCost.employmentInsurance ?? null,
           pension: pensionData.employerCost.pension,
           incomeTax: healthData.employerCost.incomeTax
         }
