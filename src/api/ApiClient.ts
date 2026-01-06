@@ -1,5 +1,5 @@
 import api from './axios';
-import { getCachedApiConfig } from '../config/api-config';
+import { getApiConfig } from '../config/api-config';
 
 interface HealthInsuranceResponse {
   employeeCost: {
@@ -58,7 +58,7 @@ export class ApiClient {
    * 获取健康保险数据
    */
   private static async getHealthInsurance(monthlySalary: number, age: number): Promise<HealthInsuranceResponse> {
-    const config = await getCachedApiConfig();
+    const config = getApiConfig();
     try {
       const response = await api.get<HealthInsuranceResponse>(
         `${config.healthInsuranceUrl}/health-insurance/calculate`,
@@ -75,7 +75,7 @@ export class ApiClient {
    * 获取雇佣保险数据
    */
   private static async getEmploymentInsurance(monthlySalary: number): Promise<EmploymentInsuranceResponse> {
-    const config = await getCachedApiConfig();
+    const config = getApiConfig();
     try {
       const response = await api.get<EmploymentInsuranceResponse>(
         `${config.employmentInsuranceUrl}/employment-insurance/calculate`,
@@ -92,7 +92,7 @@ export class ApiClient {
    * 获取厚生年金数据
    */
   private static async getPensionInsurance(monthlySalary: number): Promise<PensionInsuranceResponse> {
-    const config = await getCachedApiConfig();
+    const config = getApiConfig();
     try {
       const response = await api.get<PensionInsuranceResponse>(
         `${config.pensionInsuranceUrl}/pension-insurance/calculate`,
