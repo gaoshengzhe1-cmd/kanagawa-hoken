@@ -59,14 +59,28 @@ export class ApiClient {
    */
   private static async getHealthInsurance(monthlySalary: number, age: number): Promise<HealthInsuranceResponse> {
     const config = getApiConfig();
+    const url = `${config.healthInsuranceUrl}/health-insurance/calculate`;
+    console.log('请求URL:', url);
+    console.log('请求参数:', { monthlySalary, age });
+    
     try {
       const response = await api.get<HealthInsuranceResponse>(
-        `${config.healthInsuranceUrl}/health-insurance/calculate`,
-        { params: { monthlySalary, age } }
+        url,
+        { 
+          params: { 
+            monthlySalary: Math.round(monthlySalary), 
+            age: Math.round(age) 
+          } 
+        }
       );
+      console.log('响应数据:', response.data);
       return response.data;
     } catch (error) {
       console.error('获取健康保险数据失败:', error);
+      if (error instanceof Error) {
+        console.error('错误详情:', error.message);
+        console.error('错误堆栈:', error.stack);
+      }
       throw error;
     }
   }
