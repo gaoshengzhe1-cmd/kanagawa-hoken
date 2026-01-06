@@ -21,14 +21,26 @@ export const calculateInsurance = async (
     
     // 3. 计算扣除社保后的金额
     const afterSocialInsurance = salary - socialInsuranceDeductions;
+    console.log('=== 源泉所得税计算参数 ===');
+    console.log('总工资:', salary);
+    console.log('社保等扣除总额:', socialInsuranceDeductions);
+    console.log('扣除社保后金额:', afterSocialInsurance);
+    console.log('年龄:', age);
+    console.log('========================');
     
     // 4. 用扣除社保后的金额去查询源泉所得税
     let taxAmount = 0;
     if (options.enableTax) {
       try {
+        console.log('正在查询源泉所得税，参数:', { 
+          monthlySalary: afterSocialInsurance, 
+          age 
+        });
         // Call the API to get the tax for the taxable income
         const taxData = await ApiClient.getSocialInsurance(afterSocialInsurance, age);
+        console.log('API返回的所得税数据:', taxData);
         taxAmount = taxData.employeeCost.incomeTax || 0;
+        console.log('计算出的源泉所得税:', taxAmount);
         
         // Apply dependent adjustment if applicable
         if (dependents > 7) {
